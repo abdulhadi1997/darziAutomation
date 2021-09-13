@@ -4,6 +4,16 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <dependency>
+                  <groupId>io.github.bonigarcia</groupId>
+                  <artifactId>webdrivermanager</artifactId>
+                  <version>3.7.1</version>
+              </dependency>
+              <dependency>
+                  <groupId>commons-io</groupId>
+                  <artifactId>commons-io</artifactId>
+                  <version>2.6</version>
+              </dependency>
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

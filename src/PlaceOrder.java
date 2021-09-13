@@ -3,6 +3,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -12,6 +14,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class PlaceOrder {
+
+    private static final String[] orderDetails = new String[]{
+            "darziauto@gmail.com", "Abdul", "Hadi", "03224971876",
+            "323 St 14 GG Phase 4 GG Phase 4 DHA", "Pakistan", "Punjab", "Lahore"};
+
     public static List<String[]> grabURLFromRecord(int searchColumnIndex, String searchString) throws IOException {
 
         String line;
@@ -36,19 +43,23 @@ public class PlaceOrder {
     public static void automateOrder() throws IOException, InterruptedException {
 
         List<String[]> record = grabURLFromRecord(8, "F");
-        String[] orderDetails = new String[]{
-                "darziauto@gmail.com", "Abdul", "Hadi", "03224971876",
-                "323 St 14 GG Phase 4 GG Phase 4 DHA", "Pakistan", "Punjab", "Lahore"};
+
+        System.setProperty("webdriver.chrome.driver","libs/chromedriver");
+        WebDriver driver = new ChromeDriver();
+        WebDriverWait wait = new WebDriverWait(driver,20);
+        JavascriptExecutor js = (JavascriptExecutor)driver;
+        driver.get("https://www.google.com/");
+        driver.manage().window().maximize();
+        ((JavascriptExecutor)driver).executeScript("window.open()");
+        js.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+        ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
+        int i=0;
 
         for(String[] temp : record) {
-            System.setProperty("webdriver.chrome.driver","libs/chromedriver");
-            WebDriver driver = new ChromeDriver();
-            JavascriptExecutor js = (JavascriptExecutor)driver;
+            driver.switchTo().window(tabs.get(i));
+            i++;
             String URL = temp[7];
             driver.get(URL);
-            driver.manage().window().maximize();
-            js.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-
             String expectedSKU = temp[2];
             String expectedAvailability = "In stock";
             String actualSKU = driver.findElement(By.xpath("//div[@itemprop='sku']")).getText();
@@ -59,42 +70,44 @@ public class PlaceOrder {
 
             Thread.sleep(5000);
 
-            WebElement addToCart = driver.findElement(By.id("product-addtocart-button"));
-            addToCart.click();
+            WebElement addToBag =
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("product-addtocart-button")));
+            addToBag.click();
 
-            Thread.sleep(3000);
-            WebElement NavToCheckoutModal = driver.findElement(By.id("modal-content-59"));
-            assert NavToCheckoutModal.isDisplayed();
-            WebElement checkoutButton = driver.findElement(By.xpath("//footer/button[2]"));
-            checkoutButton.click();
-
-            Thread.sleep(3000);
-
-            WebElement form = driver.findElement(By.id("shipping"));
-            assert form.isDisplayed();
-
-            WebElement emailElement = driver.findElement(By.id("customer-email"));
-            WebElement firstNameElement = driver.findElement(By.xpath("//div[@name='shippingAddress.firstname']//input[@name='firstname']"));
-            WebElement lastNameElement = driver.findElement(By.xpath("//div[@name='shippingAddress.lastname']//input[@name='lastname']"));
-            WebElement cellNumberElement = driver.findElement(By.xpath("//div[@name='shippingAddress.telephone']//input[@name='telephone']"));
-            WebElement addressElement = driver.findElement(By.xpath("//div[@name='shippingAddress.street.0']//input[@name='street[0]']"));
-            WebElement countryElement = driver.findElement(By.xpath("//select[@name='country_id']"));
-            WebElement provinceElement = driver.findElement(By.xpath("//select[@name='region_id']"));
-            WebElement cityElement = driver.findElement(By.xpath("//select[@name='city_id']"));
-
-            emailElement.sendKeys(orderDetails[0]);
-            firstNameElement.sendKeys(orderDetails[1]);
-            lastNameElement.sendKeys(orderDetails[2]);
-            cellNumberElement.sendKeys(orderDetails[3]);
-            addressElement.sendKeys(orderDetails[4]);
-            countryElement.sendKeys(orderDetails[5]);
-            provinceElement.sendKeys(orderDetails[6]);
-            cityElement.sendKeys(orderDetails[7]);
-
-            driver.quit();
-
-            Thread.sleep(3000);
+            WebElement continueShopping =
+                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[text()='Continue Shopping']")));
+            continueShopping.click();
         }
+
+        WebElement bagIcon =
+                wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//div[@class='bottom-panel']")));
+        bagIcon.click();
+
+        WebElement checkoutButton =
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("top-cart-btn-checkout")));
+        assert checkoutButton.isDisplayed();
+        checkoutButton.click();
+
+        WebElement form = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("shipping")));
+        assert form.isDisplayed();
+
+        WebElement emailElement = driver.findElement(By.id("customer-email"));
+        WebElement firstNameElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@name='shippingAddress.firstname']//input[@name='firstname']")));
+        WebElement lastNameElement = driver.findElement(By.xpath("//div[@name='shippingAddress.lastname']//input[@name='lastname']"));
+        WebElement cellNumberElement = driver.findElement(By.xpath("//div[@name='shippingAddress.telephone']//input[@name='telephone']"));
+        WebElement addressElement = driver.findElement(By.xpath("//div[@name='shippingAddress.street.0']//input[@name='street[0]']"));
+        WebElement countryElement = driver.findElement(By.xpath("//select[@name='country_id']"));
+        WebElement provinceElement = driver.findElement(By.xpath("//select[@name='region_id']"));
+        WebElement cityElement = driver.findElement(By.xpath("//select[@name='city_id']"));
+
+        emailElement.sendKeys(orderDetails[0]);
+        firstNameElement.sendKeys(orderDetails[1]);
+        lastNameElement.sendKeys(orderDetails[2]);
+        cellNumberElement.sendKeys(orderDetails[3]);
+        addressElement.sendKeys(orderDetails[4]);
+        countryElement.sendKeys(orderDetails[5]);
+        provinceElement.sendKeys(orderDetails[6]);
+        cityElement.sendKeys(orderDetails[7]);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
